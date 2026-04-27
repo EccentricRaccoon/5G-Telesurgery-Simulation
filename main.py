@@ -226,6 +226,8 @@ def draw_hud(screen, font, font_small, font_title, metrics, force, accuracy,
     panel_lines = [
         (f"[ {metrics['technology']} ]", tech_color),
         (f"SNR: {metrics['snr_db']} dB", WHITE),
+        (f"Users: {metrics.get('num_users', 1)}", CYAN),
+        (f"Profile: {metrics.get('fading_profile', 'Pedestrian')}", ORANGE),
         (f"BLER: {metrics['bler']:.2e}",
          LIGHT_GREEN if metrics['bler'] < 1e-3 else LIGHT_RED),
         (f"Throughput: {metrics['throughput_mbps']:.0f} Mbps", WHITE),
@@ -340,7 +342,7 @@ def draw_hud(screen, font, font_small, font_title, metrics, force, accuracy,
     ctrl_s = pygame.Surface((SCREEN_WIDTH, 22), pygame.SRCALPHA)
     ctrl_s.fill((0, 0, 0, 140))
     screen.blit(ctrl_s, (0, SCREEN_HEIGHT - 22))
-    controls = "1:5G/25dB  2:5G/15dB  3:4G/25dB  4:4G/15dB  R:Reset  C:Compare  G:Graphs"
+    controls = "1/2:5G  3/4:4G  U/J:Users±5  F:Fading  R:Reset  C:Comp  G:Graph"
     screen.blit(font_small.render(controls, True, GRAY), (10, SCREEN_HEIGHT - 19))
 
 
@@ -453,6 +455,12 @@ def main():
                 elif event.key == pygame.K_4:
                     network.set_technology('4g')
                     network.set_snr(15)
+                elif event.key == pygame.K_u:
+                    network.set_num_users(network.num_users + 5)
+                elif event.key == pygame.K_j:
+                    network.set_num_users(network.num_users - 5)
+                elif event.key == pygame.K_f:
+                    network.cycle_fading_profile()
                 elif event.key == pygame.K_r:
                     robot_trail.clear()
                     accuracy_samples = 0

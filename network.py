@@ -31,6 +31,8 @@ class Matlab5GNetwork:
         
         self.active_tech = '5g'
         self.active_snr = 20
+        self.num_users = 1
+        self.fading_profile = 'Pedestrian'
         
         self.current_bler = 0.0
         self.current_throughput = 0.0
@@ -103,6 +105,7 @@ class Matlab5GNetwork:
         try:
             self._pending_future = self.matlab_engine.simulate_live_step(
                 self.active_tech, float(self.active_snr),
+                float(self.num_users), self.fading_profile,
                 nargout=1, background=True
             )
         except Exception as e:
@@ -117,6 +120,7 @@ class Matlab5GNetwork:
         try:
             self._compare_future = self.matlab_engine.simulate_live_step(
                 compare_tech, float(self.active_snr),
+                float(self.num_users), self.fading_profile,
                 nargout=1, background=True
             )
         except Exception as e:
@@ -236,11 +240,27 @@ class Matlab5GNetwork:
         if not self.live_mode:
             self._update_metrics()
 
+    def set_num_users(self, count):
+        """Set the number of active users in the network."""
+        self.num_users = max(1, count)
+        if not self.live_mode:
+            self._update_metrics()
+
+    def cycle_fading_profile(self):
+        """Cycle through the available fading profiles."""
+        profiles = ['Pedestrian', 'Vehicular', 'Urban']
+        idx = profiles.index(self.fading_profile)
+        self.fading_profile = profiles[(idx + 1) % len(profiles)]
+        if not self.live_mode:
+            self._update_metrics()
+
     def get_current_metrics(self):
         """Return current network metrics as a dictionary."""
         return {
             'technology': '5G NR' if self.active_tech == '5g' else '4G LTE',
             'snr_db': self.active_snr,
+            'num_users': self.num_users,
+            'fading_profile': self.fading_profile,
             'bler': self.current_bler,
             'throughput_mbps': self.current_throughput,
             'latency_ms': self.current_latency,
